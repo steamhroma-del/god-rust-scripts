@@ -228,6 +228,34 @@ var currentUrl = window.location.href;
                 if (search && !modules.contains(search)) modules.appendChild(search);
             }
 
+            function decoratePrivilegeCards() {
+                const privilegeTiers = {
+                    "5654254": "vip", "8295330": "vip",
+                    "5655271": "premium",
+                    "5655277": "elite", "6425821": "elite"
+                };
+                const privilegeIds = new Set([
+                    "8295330", "8763447", "5654254", "5655271", "8763448", "5655277", "5971599", "6425821",
+                    "6912315", "6425825", "8763450", "8763449", "8698380", "5982576", "5982324", "5982578",
+                    "6383608", "7973568", "6383607", "8468317", "6383685", "8684455", "6383684", "5835205",
+                    "6397872", "7984977", "7366693", "6397874", "8753406", "6132290", "6383701", "6425812",
+                    "7363514", "6383606"
+                ]);
+                document.querySelectorAll('.Product-module__wrapper[data-productid]').forEach(card => {
+                    const id = card.getAttribute('data-productid');
+                    if (!privilegeIds.has(id)) return;
+                    card.classList.add('godRustPrivilegeCard');
+                    const tier = privilegeTiers[id] || (Number(id) % 2 ? 'vip' : 'premium');
+                    card.classList.add(`godRustPrivilegeCard--${tier}`);
+                    if (!card.querySelector('.godRustPrivilegeCard__badge')) {
+                        const badge = document.createElement('span');
+                        badge.className = 'godRustPrivilegeCard__badge';
+                        badge.textContent = 'ПРИВИЛЕГИЯ';
+                        card.appendChild(badge);
+                    }
+                });
+            }
+
             function addPromoCase(attempt = 0) {
                 if (document.querySelector('.godRustCatalogOverview')) return;
                 const filters = document.querySelector('.Modules-container');
@@ -248,28 +276,15 @@ var currentUrl = window.location.href;
                 anchor.parentNode.insertBefore(overview, anchor);
                 const search = (filters && filters.querySelector('.Search-module__wrapper')) || searchFallback;
                 const servers = (filters && filters.querySelector('.Servers-module__servers')) || serversFallback;
-                if (search) overview.querySelector('.godRustSearchSlot').appendChild(search);
+                if (search) {
+                    overview.querySelector('.godRustSearchSlot').appendChild(search);
+                    const searchInput = search.querySelector('input');
+                    if (searchInput) { searchInput.placeholder = 'Поиск товара'; searchInput.setAttribute('aria-label', 'Поиск товара'); }
+                }
                 if (servers) overview.querySelector('.godRustServerSlot').appendChild(servers);
                 if (categories) {
                     overview.querySelector('.godRustCategorySlot').appendChild(categories);
-                    categories.querySelectorAll('.godRustCategoryIcon').forEach((oldIcon) => oldIcon.remove());
-                    categories.querySelectorAll(':scope > *').forEach((item) => {
-                        if (item.querySelector('img, .godRustCategoryIcon')) return;
-                        const label = item.textContent.toLowerCase();
-                        const mappings = [
-                            [/оруж/, '🔫'], [/ресурс/, '🪵'], [/боеприп|патрон/, '💣'], [/одежд|брон/, '🦺'],
-                            [/конструкц|строит/, '🧱'], [/инструмент/, '🔧'], [/медикам|лечен/, '🩹'], [/ед|пищ/, '🍖'],
-                            [/электр/, '⚡'], [/компонент/, '⚙️'], [/праздник/, '🎃'], [/фермер|растен/, '🌱'],
-                            [/машин|транспорт/, '🚙'], [/dlc/, '🎮'], [/проч/, '📦'], [/все|товар/, '▦']
-                        ];
-                        const match = mappings.find(([pattern]) => pattern.test(label));
-                        if (!match) return;
-                        const icon = document.createElement('span');
-                        icon.className = 'godRustCategoryIcon';
-                        icon.setAttribute('aria-hidden', 'true');
-                        icon.textContent = match[1];
-                        item.prepend(icon);
-                    });                } else {
+                } else {
                     const title = overview.querySelector('.godRustCategoryPanel__top span');
                     if (title) title.textContent = 'ПОИСК ТОВАРОВ';
                     overview.querySelector('.godRustCategorySlot').remove();
@@ -455,11 +470,12 @@ var currentUrl = window.location.href;
             addNewsBlock();
             editElement();
             addPromoCase();
+            decoratePrivilegeCards();
             const catalogObserver = new MutationObserver(() => {
                 if (!document.querySelector('.godRustCatalogOverview')) addPromoCase();
+                decoratePrivilegeCards();
             });
             catalogObserver.observe(document.querySelector('main') || document.body, { childList: true, subtree: true });
-            window.setTimeout(() => catalogObserver.disconnect(), 15000);
             addElement();
             addModalPromo();
             addModalBonus();
