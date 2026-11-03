@@ -22,17 +22,74 @@ window.openGodRustInfo = function() {
     }
 };
 window.openGodRustPromoCase = function() {
-    if (document.querySelector('#godRustPromoCaseModal')) {
-        document.querySelector('#godRustPromoCaseModal').classList.add('active');
+    const rewards = [
+        { code: 'K7M-P4X2Q', label: '10 ₽ на баланс' }, { code: 'R3N-T8W5B', label: '10 ₽ на баланс' },
+        { code: 'V6C-H2J9D', label: '10 ₽ на баланс' }, { code: 'A4F-Y7L3P', label: '10 ₽ на баланс' },
+        { code: 'D9Q-M5K2X', label: '25 ₽ на баланс' }, { code: 'B2W-R6N8C', label: '25 ₽ на баланс' },
+        { code: 'T5J-P3V7H', label: '25 ₽ на баланс' }, { code: 'X8L-C4D6M', label: '25 ₽ на баланс' },
+        { code: 'N1Y-G9F2R', label: '50 ₽ на баланс' }, { code: 'H3P-W6A8K', label: '50 ₽ на баланс' },
+        { code: 'C7D-J2T5V', label: '50 ₽ на баланс' }, { code: 'M4R-X8B1Q', label: '100 ₽ на баланс' },
+        { code: 'F6K-N3Y9W', label: '100 ₽ на баланс' }, { code: 'J2V-L5C7A', label: '250 ₽ на баланс' },
+        { code: 'P8B-D4R6N', label: 'Скидка 5%' }, { code: 'Y5H-K1M3T', label: 'Скидка 10%' },
+        { code: 'W9A-Q7F2J', label: 'Скидка 15%' }, { code: 'L3X-V6P8D', label: 'VIP на 3 дня' },
+        { code: 'G4N-T2H5C', label: 'ELITE на 7 дней' }, { code: 'Q6M-B9J1Y', label: 'GOD на 30 дней' }
+    ];
+    const stateKey = 'godRustCasePreviewV1';
+    const cooldownMs = 7 * 24 * 60 * 60 * 1000;
+    const readState = () => { try { return JSON.parse(localStorage.getItem(stateKey) || 'null'); } catch (_) { return null; } };
+    const saveState = state => { try { localStorage.setItem(stateKey, JSON.stringify(state)); } catch (_) {} };
+    const remaining = until => {
+        const total = Math.max(0, until - Date.now());
+        const days = Math.floor(total / 86400000);
+        const hours = Math.floor((total % 86400000) / 3600000);
+        return days ? `${days} д. ${hours} ч.` : `${hours} ч.`;
+    };
+    let modal = document.querySelector('#godRustPromoCaseModal');
+    if (!modal) {
+        const html = `<div id="godRustPromoCaseModal" class="customModalWrapper active godRustPromoCaseModal" role="presentation" onclick="if(event.target === this) this.classList.remove('active');">
+            <div class="customModalOverflow"><div class="customModalPosition"><div class="customModalContent" role="presentation" onclick="event.stopPropagation();">
+                <div class="boxHeader"><div class="text"><p class="title">Кейс промокодов</p></div><button class="btn Button-module__btn Button-module__gray" type="button" aria-label="Закрыть" onclick="document.querySelector('#godRustPromoCaseModal').classList.remove('active');">×</button></div>
+                <div class="boxBody godRustPromoCaseModal__body"><div class="godRustPromoCaseModal__opened"><div class="godRustPromoCaseModal__glow">✦</div><div class="godRustPromoCaseModal__box">🎁</div><h2>Кейс промокодов</h2><p>Открыть кейс можно раз в 7 дней.</p><button type="button" class="godRustPromoCase__button godRustCaseOpen">Открыть кейс</button></div></div>
+            </div></div></div></div>`;
+        document.body.insertAdjacentHTML('beforeend', html);
+        modal = document.querySelector('#godRustPromoCaseModal');
+    } else {
+        modal.classList.add('active');
+    }
+    const body = modal.querySelector('.godRustPromoCaseModal__body');
+    const renderReward = state => {
+        const until = state.openedAt + cooldownMs;
+        body.innerHTML = `<div class="godRustPromoCaseModal__opened"><div class="godRustPromoCaseModal__glow">✦</div><div class="godRustPromoCaseModal__box">🎁</div><h2>${state.label}</h2><p>Твой промокод:</p><code class="godRustCaseCode">${state.code}</code><button type="button" class="godRustPromoCase__button godRustCaseCopy">Скопировать</button><p class="godRustCaseStatus">Активируй код в профиле магазина.</p><p>Следующее открытие через ${remaining(until)}.</p></div>`;
+        body.querySelector('.godRustCaseCopy').addEventListener('click', async function() {
+            try { await navigator.clipboard.writeText(state.code); }
+            catch (_) {
+                const field = document.createElement('textarea');
+                field.value = state.code; field.style.position = 'fixed'; field.style.opacity = '0';
+                document.body.appendChild(field); field.select(); document.execCommand('copy'); field.remove();
+            }
+            this.textContent = 'Скопировано ✓';
+            body.querySelector('.godRustCaseStatus').textContent = 'Код скопирован. Введи его в профиле магазина.';
+        });
+    };
+    const previous = readState();
+    if (previous && Date.now() < previous.openedAt + cooldownMs) {
+        renderReward(previous);
         return;
     }
-    const html = `<div id="godRustPromoCaseModal" class="customModalWrapper active godRustPromoCaseModal" role="presentation" onclick="if(event.target === this) this.classList.remove('active');">
-        <div class="customModalOverflow"><div class="customModalPosition"><div class="customModalContent" role="presentation" onclick="event.stopPropagation();">
-            <div class="boxHeader"><div class="text"><p class="title">Кейс промокодов</p></div><button class="btn Button-module__btn Button-module__gray" type="button" aria-label="Закрыть" onclick="document.querySelector('#godRustPromoCaseModal').classList.remove('active');">×</button></div>
-            <div class="boxBody godRustPromoCaseModal__body"><div class="godRustPromoCaseModal__opened"><div class="godRustPromoCaseModal__glow">✦</div><div class="godRustPromoCaseModal__box">🎁</div><h2>Кейс открыт!</h2><p>Актуальные промокоды и бонусы команда публикует в Discord.</p><a href="https://discord.gg/sGDnGCespr" target="_blank" rel="noopener noreferrer" class="godRustPromoCase__button">Перейти за промокодами</a></div></div>
-        </div></div></div>
-    </div>`;
-    document.body.insertAdjacentHTML('beforeend', html);
+    body.innerHTML = `<div class="godRustPromoCaseModal__opened"><div class="godRustPromoCaseModal__glow">✦</div><div class="godRustPromoCaseModal__box">🎁</div><h2>Кейс промокодов</h2><p>Открыть кейс можно раз в 7 дней.</p><button type="button" class="godRustPromoCase__button godRustCaseOpen">Открыть кейс</button></div>`;
+    const oldButton = modal.querySelector('.godRustCaseOpen');
+    if (oldButton) oldButton.replaceWith(oldButton.cloneNode(true));
+    const openButton = modal.querySelector('.godRustCaseOpen');
+    if (!openButton) return;
+    openButton.addEventListener('click', function() {
+        const reward = rewards[Math.floor(Math.random() * rewards.length)];
+        const state = { ...reward, openedAt: Date.now() };
+        saveState(state);
+        this.disabled = true;
+        this.textContent = 'Открываем…';
+        modal.querySelector('.godRustPromoCaseModal__box').classList.add('godRustPromoCaseModal__box--opening');
+        window.setTimeout(() => renderReward(state), 900);
+    }, { once: true });
 };
 var currentUrl = window.location.href;
 
@@ -228,6 +285,31 @@ var currentUrl = window.location.href;
                 if (search && !modules.contains(search)) modules.appendChild(search);
             }
 
+            function decorateCategoryIcons() {
+                const icons = [
+                    [/все|all/, '🗂️'], [/привилег|premium|vip/, '🎟️'], [/кейс/, '📦'],
+                    [/ресурс/, '🪵'], [/компонент/, '⚙️'], [/карточ/, '🃏'], [/оруж/, '🔫'],
+                    [/одежд/, '🧥'], [/боеприп|патрон|ракета/, '💥'], [/взрывчат/, '🧨'],
+                    [/конструкц/, '🏗️'], [/верстак/, '🛠️'], [/инструмент/, '🔧'],
+                    [/медикамент|медиц/, '🧪'], [/ед[аы]/, '🍖'], [/проч/, '✨'],
+                    [/электрич/, '⚡'], [/праздник/, '🎃'], [/фермер/, '🌱'],
+                    [/машин|транспорт/, '🚙'], [/dlc/, '🎮']
+                ];
+                document.querySelectorAll('.Categories-module__categories > *').forEach(item => {
+                    const title = (item.getAttribute('aria-label') || item.getAttribute('title') || item.textContent || '').trim().toLowerCase();
+                    const match = icons.find(([pattern]) => pattern.test(title));
+                    if (!match) return;
+                    let icon = item.querySelector(':scope > .godRustCategoryIcon');
+                    if (!icon) {
+                        icon = document.createElement('span');
+                        icon.className = 'godRustCategoryIcon';
+                        icon.setAttribute('aria-hidden', 'true');
+                        item.insertBefore(icon, item.firstChild);
+                    }
+                    icon.textContent = match[1];
+                });
+            }
+
             function decoratePrivilegeCards() {
                 const privilegeTiers = {
                     "5654254": "vip", "8295330": "vip",
@@ -284,6 +366,7 @@ var currentUrl = window.location.href;
                 if (servers) overview.querySelector('.godRustServerSlot').appendChild(servers);
                 if (categories) {
                     overview.querySelector('.godRustCategorySlot').appendChild(categories);
+                    decorateCategoryIcons();
                 } else {
                     const title = overview.querySelector('.godRustCategoryPanel__top span');
                     if (title) title.textContent = 'ПОИСК ТОВАРОВ';
@@ -471,9 +554,11 @@ var currentUrl = window.location.href;
             editElement();
             addPromoCase();
             decoratePrivilegeCards();
+            decorateCategoryIcons();
             const catalogObserver = new MutationObserver(() => {
                 if (!document.querySelector('.godRustCatalogOverview')) addPromoCase();
                 decoratePrivilegeCards();
+                decorateCategoryIcons();
             });
             catalogObserver.observe(document.querySelector('main') || document.body, { childList: true, subtree: true });
             addElement();
