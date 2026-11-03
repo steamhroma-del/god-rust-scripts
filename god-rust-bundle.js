@@ -22,7 +22,7 @@ window.openGodRustInfo = function() {
         modal.classList.add('active');
     }
 };
-window.openGodRustPromoCase = function() {
+window.openGodRustPromoCaseV2 = function() {
     const rewards = [
         { code: 'K7M-P4X2Q', label: '10 ₽ на баланс' }, { code: 'R3N-T8W5B', label: '10 ₽ на баланс' },
         { code: 'V6C-H2J9D', label: '10 ₽ на баланс' }, { code: 'A4F-Y7L3P', label: '10 ₽ на баланс' },
@@ -92,6 +92,18 @@ window.openGodRustPromoCase = function() {
         window.setTimeout(() => renderReward(state), 900);
     }, { once: true });
 };
+// Keep legacy buttons working and route their click before any stale inline handler runs.
+window.openGodRustPromoCase = window.openGodRustPromoCaseV2;
+if (!window.__godRustPromoCaseClickFix) {
+    window.__godRustPromoCaseClickFix = true;
+    document.addEventListener('click', function(event) {
+        const launchButton = event.target.closest('.godRustPromoCase__copy .godRustPromoCase__button');
+        if (!launchButton) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        window.openGodRustPromoCaseV2();
+    }, true);
+}
 var currentUrl = window.location.href;
 
 //if (currentUrl.startsWith("https://whitewhite2.gamestores.app")) {
@@ -353,7 +365,7 @@ var currentUrl = window.location.href;
                 overview.className = 'godRustCatalogOverview';
                 overview.innerHTML = `<aside class="godRustPromoCase">
                     <div class="godRustPromoCase__crate" aria-hidden="true"><span>?</span><div>GOD RUST</div></div>
-                    <div class="godRustPromoCase__copy"><span class="godRustPromoCase__eyebrow">БОКС ПРОМОКОДОВ • БОНУСЫ</span><h2>Что внутри?</h2><p>Промокоды на скидки и бонусы публикуются в нашем Discord.</p><button type="button" onclick="openGodRustPromoCase()" class="godRustPromoCase__button">Открыть кейс</button></div>
+                    <div class="godRustPromoCase__copy"><span class="godRustPromoCase__eyebrow">БОКС ПРОМОКОДОВ • БОНУСЫ</span><h2>Что внутри?</h2><p>Открой кейс и получи один из промокодов.</p><button type="button" onclick="window.openGodRustPromoCaseV2()" class="godRustPromoCase__button">Открыть кейс</button></div>
                 </aside><div class="godRustCategoryPanel"><div class="godRustCategoryPanel__top"><span>КАТЕГОРИИ</span><div class="godRustSearchSlot"></div></div><div class="godRustServerSlot"></div><div class="godRustCategorySlot"></div></div></section>`;
                 const anchor = filters || categories || searchFallback || serversFallback;
                 anchor.parentNode.insertBefore(overview, anchor);
