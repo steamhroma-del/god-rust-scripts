@@ -26,6 +26,30 @@ window.__godRustBundleBooted||(window.__godRustBundleBooted=!0,function(){if(!wi
     var root = document.createElement("div");
     root.innerHTML = html;
     var seen = new Set();
+    var kitHeading = root.querySelector("#kits, .desc__title__kit");
+    var contentBlocks = Array.from(root.querySelectorAll(".desc__content"));
+    if (contentBlocks.length) {
+      return contentBlocks
+        .filter(function (node) { return !kitHeading || !!(node.compareDocumentPosition(kitHeading) & 4); })
+        .map(function (node) {
+          var title = Array.from(node.querySelectorAll(".content__info .title"))
+            .map(function (item) { return (item.textContent || "").replace(/\s+/g, " ").trim(); })
+            .filter(Boolean).join(" · ");
+          var detail = Array.from(node.querySelectorAll(".content__info .description"))
+            .map(function (item) { return (item.textContent || "").replace(/\s+/g, " ").trim(); })
+            .filter(Boolean).join(" ");
+          var value = Array.from(node.querySelectorAll("font"))
+            .map(function (item) { return (item.textContent || "").replace(/\s+/g, " ").trim(); })
+            .filter(Boolean).join(" · ");
+          var label = [title, detail].filter(Boolean).join(" — ");
+          return [label, value].filter(Boolean).join(": ");
+        })
+        .filter(function (text) {
+          text = text.trim();
+          if (text.length < 3 || seen.has(text)) return false;
+          seen.add(text); return true;
+        });
+    }
     var serviceLines = Array.from(root.querySelectorAll(".desc-service,li"));
     var nodes = serviceLines.length ? serviceLines : Array.from(root.querySelectorAll("p"));
     return nodes
